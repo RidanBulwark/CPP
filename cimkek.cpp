@@ -97,9 +97,11 @@ public:
 
     void ertekno(){
         ertek += 1;
+        valtoztam = true;
     }
     void ertekcsokk(){
         ertek -= 1;
+        valtoztam = true;
     }
 };
 
@@ -137,6 +139,7 @@ int main()
     event ev;
     while(gin >> ev)
     {
+
         if(ev.type == ev_mouse)
         {
             if(ev.button == btn_left)
@@ -151,12 +154,18 @@ int main()
                         egyik->kijelol();
                         // egyik->elkap(ev.pos_x, ev.pos_y);
                         elkapott = egyik;
+                        break;
                     }
                 }
             }
             else if(ev.button == -btn_left)
             {
                 lenyomva = false;
+                for(block *egyik : blocks){
+                    if(egyik != elkapott){
+                        egyik->elenged();
+                    }
+                }
             }
             else if(ev.button == 0 and lenyomva)
             {
@@ -180,7 +189,6 @@ int main()
                 for(block *b : blocks){
                     if(b->kijelolte()){
                         b->ertekno();
-                        b->valtoztam = true;
                     }
                 }
             }
@@ -188,7 +196,6 @@ int main()
                 for(block *b : blocks){
                     if(b->kijelolte()){
                         b->ertekcsokk();
-                        b->valtoztam = true;
                     }
                 }
         }
