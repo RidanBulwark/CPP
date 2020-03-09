@@ -13,8 +13,17 @@ const int szelesseg = 600, magassag = 400;
 
 struct block
 {
-    block():szel(rand()% 30 + 20),
-        mag(rand()% 30 + 20)
+private:
+    int x, y, szel, mag, dx, dy;
+    bool kijelolt = false;
+    int ertek = 0;
+
+public:
+    bool valtoztam = false;
+
+    block()
+        : szel(rand()% 30 + 20),
+          mag(rand()% 30 + 20)
     {
         x = (rand()%(szelesseg - szel));
         y = (rand()%(magassag - mag));
@@ -27,35 +36,51 @@ struct block
         {
             keret = 4;
         }
-        gout << color(200, 0, 0) << move_to(x, y) << box(szel, mag)
-             << color(255, 255, 40) << move_to(x, y) << box(szel, keret)
-             << box(-keret, mag-keret+1) << box(-szel+keret-1, -keret) 
-             << box(keret, -mag+keret) << refresh;
+        // gout << color(200, 0, 0) << move_to(x, y) << box(szel, mag)
+        //      << color(255, 255, 40) << move_to(x, y) << box(szel, keret)
+        //      << box(-keret, mag-keret+1) << box(-szel+keret-1, -keret)
+        //      << box(keret, -mag+keret) << refresh;
+        stringstream ss;
+        ss << ertek;
+        string kiirat;
+        ss >> kiirat;
+        gout << color(255, 255, 40) << move_to(x, y) << box(szel, mag);
+        gout << color(200, 0, 0) << move_to(x+keret, y+keret) << box(szel-2*keret, mag-2*keret);
+        gout << color(255, 255, 255) << move_to(x+szel/2-4, y+mag/2+6) << text(kiirat);
+        valtoztam = false;
+        // gout << refresh;
     }
 
     void mozgat(int x, int y)
     {
-        this->x = x;
-        this->y = y;
-        draw();
+        this->x = x - szel/2;
+        this->y = y - mag/2;
+        valtoztam = true;
+        // draw();
     }
 
-    void elkap(int ex, int ey){
-        dx = ex-x;
-        dy = ey-y;
-    }
+    // ez annyira nem kell am
+    // void elkap(int ex, int ey)
+    // {
+    //     // dx = ex-x;
+    //     // dy = ey-y;
+    //     x += ex - (x + szel/2);
+    //     y += ey - (y + mag/2);
+    // }
 
     void kijelol()   //Setter
     {
         kijelolt = true;
+        valtoztam = true;
     }
-    bool kijelolte()
-    {
-        return kijelolt;
-    }
-    void elenged()   //Getter
+    void elenged()
     {
         kijelolt = false;
+        valtoztam = true;
+    }
+    bool kijelolte() //Getter
+    {
+        return kijelolt;
     }
 
     bool folotte(int ex, int ey)
@@ -64,32 +89,36 @@ struct block
                 y < ey and ey < y + mag);
     }
 
-private:
-    int x, y, szel, mag, dx, dy;
-    bool kijelolt = false;
-
+    void ertekno(){
+        ertek += 1;
+    }
+    void ertekcsokk(){
+        ertek -= 1;
+    }
 };
 
 void torol()
 {
-    gout << color(0, 0, 0) << move_to(0, 0) << box(szelesseg, magassag) << refresh;
+    gout << color(0, 0, 0) << move_to(0, 0) << box(szelesseg, magassag);
 }
+
+
 
 int main()
 {
     srand(time(0));
     gout.open(600, 400);
 
-    vector<block *> blocks;
-    //block * elkapott = nullptr;
+    vector<block*> blocks;
+    block *elkapott = nullptr;
 //    int elkapott;
 
     for(size_t i = 0; i<10; i++)
     {
-        blocks.push_back(new block);
+        blocks.push_back(new block());
     }
 
-    for(block * egyik: blocks)
+    for(block *egyik: blocks)
     {
         egyik->draw();
     }
@@ -97,36 +126,26 @@ int main()
     bool lenyomva = false;
 
     gout << refresh;
+    // gin.timer(20);
 
     event ev;
     while(gin >> ev)
     {
-        gin.timer(20);
-
         if(ev.type == ev_mouse)
         {
             if(ev.button == btn_left)
             {
                 lenyomva = true;
+                elkapott = nullptr;
                 for(block *egyik : blocks)
                 {
                     egyik->elenged();
-                    egyik->draw();
                     if(egyik->folotte(ev.pos_x, ev.pos_y))
                     {
                         egyik->kijelol();
-                        egyik->draw();
+                        // egyik->elkap(ev.pos_x, ev.pos_y);
+                        elkapott = egyik;
                     }
-                    egyik->elkap(ev.pos_x, ev.pos_y);
-                }
-
-//                for(size_t i = 0;i<blocks.size();i++){
-//                    if(blocks[i].folotte(ev.pos_x, ev.pos_y)){
-//                        elkapott = i;
-//                    }
-//                    if(elkapott != -1){
-//                        blocks[i].kijelol();
-//                    }
                 }
             }
             else if(ev.button == -btn_left)
@@ -135,20 +154,61 @@ int main()
             }
             else if(ev.button == 0 and lenyomva)
             {
-                for(block * egyik: blocks)
+                if (elkapott != nullptr)
                 {
-                    if(egyik->kijelolte())
-                    {
-                        egyik->mozgat(ev.pos_x, ev.pos_y);
-                        egyik->draw();
+                    elkapott->mozgat(ev.pos_x, ev.pos_y);
+                }
+                // for(block *egyik: blocks)
+                // {
+                //     if(egyik->kijelolte())
+                //     {
+                //         egyik->mozgat(ev.pos_x, ev.pos_y);
+                //         break;
+                //     }
+                // }
+            }
+
+        }
+
+        if(ev.keycode == key_up){
+                for(block *b : blocks){
+                    if(b->kijelolte()){
+                        b->ertekno();
+                        b->valtoztam = true;
                     }
                 }
             }
+        if(ev.keycode == key_down){
+                for(block *b : blocks){
+                    if(b->kijelolte()){
+                        b->ertekcsokk();
+                        b->valtoztam = true;
+                    }
+                }
         }
 
+            bool kell_frissiteni = false;
+            for (block *b : blocks)
+            {
+                if (b->valtoztam)
+                {
+                    kell_frissiteni = true;
+                }
+            }
+
+            if (kell_frissiteni)
+            {
+                torol();
+                for (block *b : blocks)
+                {
+                    b->draw();
+                }
+                gout << refresh;
+            }
 
 
 
+    }
 
     return 0;
 }
