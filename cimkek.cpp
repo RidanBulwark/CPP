@@ -46,7 +46,13 @@ public:
         ss >> kiirat;
         gout << color(255, 255, 40) << move_to(x, y) << box(szel, mag);
         gout << color(200, 0, 0) << move_to(x+keret, y+keret) << box(szel-2*keret, mag-2*keret);
-        gout << color(255, 255, 255) << move_to(x+szel/2-4, y+mag/2+6) << text(kiirat);
+        if(ertek >= 0){
+            gout << color(255, 255, 255) << move_to(x+szel/2-4, y+mag/2+6) << text(kiirat);
+        }
+        else{
+            gout << color(255, 255, 255) << move_to(x+szel/2-8, y+mag/2+6) << text(kiirat);
+        }
+
         valtoztam = false;
         // gout << refresh;
     }
@@ -170,7 +176,7 @@ int main()
 
         }
 
-        if(ev.keycode == key_up){
+        if(ev.button == btn_wheelup){
                 for(block *b : blocks){
                     if(b->kijelolte()){
                         b->ertekno();
@@ -178,7 +184,7 @@ int main()
                     }
                 }
             }
-        if(ev.keycode == key_down){
+        if(ev.button == btn_wheeldown){
                 for(block *b : blocks){
                     if(b->kijelolte()){
                         b->ertekcsokk();
@@ -187,24 +193,24 @@ int main()
                 }
         }
 
-            bool kell_frissiteni = false;
+        bool kell_frissiteni = false;
+        for (block *b : blocks)
+        {
+            if (b->valtoztam)
+            {
+                kell_frissiteni = true;
+            }
+        }
+
+        if (kell_frissiteni)
+        {
+            torol();
             for (block *b : blocks)
             {
-                if (b->valtoztam)
-                {
-                    kell_frissiteni = true;
-                }
+                b->draw();
             }
-
-            if (kell_frissiteni)
-            {
-                torol();
-                for (block *b : blocks)
-                {
-                    b->draw();
-                }
-                gout << refresh;
-            }
+            gout << refresh;
+        }
 
 
 
@@ -212,4 +218,3 @@ int main()
 
     return 0;
 }
-
