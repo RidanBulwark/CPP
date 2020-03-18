@@ -13,12 +13,13 @@ const int szelesseg = 600, magassag = 400;
 
 struct block
 {
-private:
+protected:
     int x, y, szel, mag, dx, dy;
     bool kijelolt = false;
     int ertek = 0;
 
 public:
+
     bool valtoztam = false;
 
     block()
@@ -105,6 +106,47 @@ public:
     }
 };
 
+struct SpecBlock : block{
+    public:
+    void draw()
+    {
+        int keret = 2;
+        if(kijelolt)
+        {
+            keret = 4;
+        }
+        // gout << color(200, 0, 0) << move_to(x, y) << box(szel, mag)
+        //      << color(255, 255, 40) << move_to(x, y) << box(szel, keret)
+        //      << box(-keret, mag-keret+1) << box(-szel+keret-1, -keret)
+        //      << box(keret, -mag+keret) << refresh;
+        stringstream ss;
+        ss << ertek;
+        string kiirat;
+        ss >> kiirat;
+        gout << color(20, 200, 200) << move_to(x, y) << box(szel, mag);
+        gout << color(255, 20, 255) << move_to(x+keret, y+keret) << box(szel-2*keret, mag-2*keret);
+//        cout << "Hali";
+        if(ertek >= 0){
+            gout << color(255, 255, 255) << move_to(x+szel/2-4, y+mag/2+6) << text(kiirat);
+        }
+        else{
+            gout << color(255, 255, 255) << move_to(x+szel/2-12, y+mag/2+6) << text(kiirat);
+        }
+
+        valtoztam = false;
+        // gout << refresh;
+    }
+
+    void ertekno(){
+        ertek += 5;
+        valtoztam = true;
+    }
+    void ertekcsokk(){
+        ertek -= 5;
+        valtoztam = true;
+    }
+};
+
 void torol()
 {
     gout << color(0, 0, 0) << move_to(0, 0) << box(szelesseg, magassag);
@@ -121,15 +163,18 @@ int main()
     block *elkapott = nullptr;
 //    int elkapott;
 
-    for(size_t i = 0; i<10; i++)
+    for(size_t i = 0; i<9; i++)
     {
         blocks.push_back(new block());
     }
-
+    SpecBlock * SBlock = new SpecBlock();
+    SBlock->draw();
     for(block *egyik: blocks)
     {
         egyik->draw();
     }
+
+
 
     bool lenyomva = false;
 
@@ -149,6 +194,12 @@ int main()
                 for(block *egyik : blocks)
                 {
                     egyik->elenged();
+                    SBlock->elenged();
+                    if(SBlock->folotte(ev.pos_x,ev.pos_y)){
+                        SBlock->kijelol();
+                        elkapott = SBlock;
+                        break;
+                    }
                     if(egyik->folotte(ev.pos_x, ev.pos_y))
                     {
                         egyik->kijelol();
@@ -165,6 +216,9 @@ int main()
                     if(egyik != elkapott){
                         egyik->elenged();
                     }
+                }
+                if(SBlock != elkapott){
+                    SBlock->elenged();
                 }
             }
             else if(ev.button == 0 and lenyomva)
@@ -186,18 +240,24 @@ int main()
         }
 
         if(ev.button == btn_wheelup){
-                for(block *b : blocks){
-                    if(b->kijelolte()){
-                        b->ertekno();
-                    }
+            for(block *b : blocks){
+                if(b->kijelolte()){
+                    b->ertekno();
                 }
             }
+            if(SBlock->kijelolte()){
+                SBlock->ertekno();
+            }
+        }
         if(ev.button == btn_wheeldown){
-                for(block *b : blocks){
-                    if(b->kijelolte()){
-                        b->ertekcsokk();
-                    }
-                }
+            for(block *b : blocks){
+                if(b->kijelolte()){
+                b->ertekcsokk();
+            }
+        }
+            if(SBlock->kijelolte()){
+                SBlock->ertekcsokk();
+            }
         }
 
         bool kell_frissiteni = false;
@@ -208,10 +268,15 @@ int main()
                 kell_frissiteni = true;
             }
         }
+        if(SBlock->valtoztam)
+        {
+            kell_frissiteni = true;
+        }
 
         if (kell_frissiteni)
         {
             torol();
+            SBlock->draw();
             for (block *b : blocks)
             {
                 b->draw();
